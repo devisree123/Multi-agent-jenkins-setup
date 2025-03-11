@@ -1,44 +1,33 @@
 pipeline {
-    agent none
-    
+    agent any
+    environment {
+        DOCKER_WORKDIR = '/workspace' // Updated to a Unix-style absolute path
+    }
     stages {
         stage('Back-end') {
             agent {
-                docker { image 'maven:3.8.1-adoptopenjdk-11' }
+                docker {
+                    image 'maven:3.8.1-adoptopenjdk-11'
+                    args '-v $WORKSPACE:/workspace -w /workspace'
+                }
             }
             steps {
-                script {
-                    // Create a simple Java Hello World application
-                    writeFile file: 'HelloWorld.java', text: '''
-                    public class HelloWorld {
-                        public static void main(String[] args) {
-                            System.out.println("Hello, World from Java!");
-                        }
-                    }
-                    '''
-                    
-                    // Compile and run Java app
-                    sh 'javac HelloWorld.java'
-                    sh 'java HelloWorld'
-                }
+                sh 'mvn --version'
+                sh 'mvn clean install'
             }
         }
-        
         stage('Front-end') {
             agent {
-                docker { image 'node:16-alpine' }
+                docker {
+                    image 'node:14'
+                    args '-v $WORKSPACE:/workspace -w /workspace'
+                }
             }
             steps {
-                script {
-                    // Create a simple Node.js Hello World application
-                    writeFile file: 'app.js', text: '''
-                    console.log("Hello, World from Node.js!");
-                    '''
-                    
-                    // Execute Node.js app
-                    sh 'node app.js'
-                }
+                sh 'npm install'
+                sh 'npm run build'
             }
         }
     }
 }
+
