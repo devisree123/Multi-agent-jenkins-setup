@@ -5,16 +5,13 @@ pipeline {
             agent {
                 docker {
                     image 'maven:3.8.1-adoptopenjdk-11'
-                    args '--user root'
+                    // Convert Windows path to Unix-style directly in the Docker args
+                    args "--user root -w $(cygpath -u \"$WORKSPACE\")"
                 }
-            }
-            environment {
-                WORKSPACE_UNIX = sh(script: 'cygpath -u "$WORKSPACE"', returnStdout: true).trim()
             }
             steps {
                 sh '''
-                    echo "Running Maven build in $WORKSPACE_UNIX"
-                    cd $WORKSPACE_UNIX
+                    echo "Running Maven build in $WORKSPACE"
                     mvn clean install
                 '''
             }
